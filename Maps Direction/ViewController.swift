@@ -9,10 +9,12 @@
 import UIKit
 import GoogleMaps
 import GooglePlaces
+import GooglePlacesAPI
 import SwiftyJSON
 import Alamofire
 import CoreLocation
 import Foundation
+import MapKit
 
 
 enum Location {
@@ -76,13 +78,13 @@ class ViewController: UIViewController , GMSMapViewDelegate ,  CLLocationManager
 		
 //		let camera = GMSCameraPosition.camera(withLatitude: (location?.coordinate.latitude)!, longitude: (location?.coordinate.longitude)!, zoom: 17.0)
 		
-		let locationTujuan = CLLocation(latitude: 35.071200, longitude: -117.451690)
+		let locationTujuan = CLLocation(latitude: 34.071200, longitude: -118.451690)
 		
 		createMarker(titleMarker: "Lokasi Tujuan", iconMarker: #imageLiteral(resourceName: "mapspin") , latitude: locationTujuan.coordinate.latitude, longitude: locationTujuan.coordinate.longitude)
 		
 		createMarker(titleMarker: "Lokasi Aku", iconMarker: #imageLiteral(resourceName: "mapspin") , latitude: (location?.coordinate.latitude)!, longitude: (location?.coordinate.longitude)!)
 		
-		drawPath(startLocation: location!, endLocation: locationTujuan)
+//		drawPath(startLocation: location!, endLocation: locationTujuan)
 		
 //		self.googleMaps?.animate(to: camera)
 		self.locationManager.stopUpdatingLocation()
@@ -128,23 +130,25 @@ class ViewController: UIViewController , GMSMapViewDelegate ,  CLLocationManager
 		let destination = "\(endLocation.coordinate.latitude),\(endLocation.coordinate.longitude)"
 		
 		
-		let url = "https://maps.googleapis.com/maps/api/directions/json?origin=\(origin)&destination=\(destination)&mode=walking"
+		let url = "https://maps.googleapis.com/maps/api/directions/json?origin=\(origin)&destination=\(destination)&mode=walking&key=AIzaSyD4GxrTY2xyeCZrpyqCSLlIZoYfITkZs9o"
 		
 		Alamofire.request(url).responseJSON { response in
-			
+			//let jsonData = response.result.value as? NSDictionary
+            //print(jsonData)
 			print(response.request as Any)  // original URL request
-			print(response.response as Any) // HTTP URL response
-			print(response.data as Any)     // server data
+			print(response.response as Any) // HTTP URL response3
+            print("Response Data: ", try! JSON(data: response.data!))     // server data
 			print(response.result as Any)   // result of response serialization
 			
-
+            
 			//let json = try! JSON(data: response.data!)
-            do{
-            let json = try JSON(data: response.data!)
+            let json =  try! JSON(data: response.data!)
+            //import json to firebase
             let routes = json["routes"].arrayValue
 			// print route using Polyline
             for route in routes
             {
+                print ("aaaaa")
                 let routeOverviewPolyline = route["overview_polyline"].dictionary
                 let points = routeOverviewPolyline?["points"]?.stringValue
                 let path = GMSPath.init(fromEncodedPath: points!)
@@ -152,54 +156,51 @@ class ViewController: UIViewController , GMSMapViewDelegate ,  CLLocationManager
                 polyline.strokeWidth = 4
                 polyline.strokeColor = UIColor.red
                 polyline.map = self.googleMaps
-            }
-            }catch{
-                print ("abc")
-                print (error)
-            }
-            
-		}
-	}
- 
-    
-    /*
-    func draw(src: CLLocation, dst: CLLocation){
-        
-        let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config)
-        
-        let url = URL(string: "https://maps.googleapis.com/maps/api/directions/json?origin=\(src.coordinate.latitude),\(src.coordinate.longitude)&destination=\(dst.coordinate.latitude),\(dst.coordinate.longitude)&sensor=false&mode=walking&key=AIzaSyD4GxrTY2xyeCZrpyqCSLlIZoYfITkZs9o")!
-        
-        let task = session.dataTask(with: url, completionHandler: {
-            (data, response, error) in
-            if error != nil {
-                print(error!.localizedDescription)
-            } else {
-                do {
-                    if let json : [String:Any] = try JSONSerialization.jsonObject(with: data!, options: .allowFragments) as? [String: Any] {
-                        
-                        let preRoutes = json["routes"] as! NSArray
-                        let routes = preRoutes[0] as! NSDictionary
-                        let routeOverviewPolyline:NSDictionary = routes.value(forKey: "overview_polyline") as! NSDictionary
-                        let polyString = routeOverviewPolyline.object(forKey: "points") as! String
-                        
-                        DispatchQueue.main.async(execute: {
-                            let path = GMSPath(fromEncodedPath: polyString)
-                            let polyline = GMSPolyline(path: path)
-                            polyline.strokeWidth = 5.0
-                            polyline.strokeColor = UIColor.green
-                            polyline.map = self.googleMaps
-                        })
+                
+                let legs = route["legs"].arrayValue;
+                for leg in legs
+                {
+                    let steps = leg["steps"].arrayValue
+                    for step in steps
+                    {
+                        let la = (step["end_location"]["lat"]).double
+                        let ln = (step["end_location"]["lng"]).double
+                        self.convertLatLongToAddress(latitude:la!, longitude:ln!)
                     }
-                    
-                } catch {
-                    print("parsing error")
                 }
             }
+		}
+	}
+    
+    func convertLatLongToAddress(latitude:Double,longitude:Double){
+        
+        let geoCoder = CLGeocoder()
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        geoCoder.reverseGeocodeLocation(location, completionHandler: { (placemarks, error) -> Void in
+            
+            // Place details
+            var placeMark: CLPlacemark!
+            placeMark = placemarks?[0]
+            // Location name
+            if let locationName = placeMark.subThoroughfare {
+                print(locationName)
+            }
+            // Street address
+            if let street = placeMark.thoroughfare {
+                print(street)
+            }
+            // Zip code
+            if let zip = placeMark.subAdministrativeArea {
+                print(zip)
+            }
+            // Country
+            if let country = placeMark.country {
+                print(country)
+            }
         })
-        task.resume()
+        
     }
-    */
+    
     
     
 	// MARK: when start location tap, this will open the search location

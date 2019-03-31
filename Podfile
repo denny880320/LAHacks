@@ -8,6 +8,7 @@ target 'MapsDirection' do
   pod 'GooglePlaces'
   pod 'GooglePlacesAPI'
   pod 'SwiftyJSON'
+  pod 'Alamofire'
 
   # Pods for Maps Direction
 

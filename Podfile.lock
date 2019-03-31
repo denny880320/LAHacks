@@ -14,6 +14,7 @@ PODS:
   - SwiftyJSON (4.2.0)
 
 DEPENDENCIES:
+  - Alamofire
   - GoogleMaps
   - GooglePlaces
   - GooglePlacesAPI
@@ -36,6 +37,6 @@ SPEC CHECKSUMS:
   ObjectMapper: 0d4402610f4e468903ae64629eec4784531e5c51
   SwiftyJSON: c4bcba26dd9ec7a027fc8eade48e2c911f229e96
 
-PODFILE CHECKSUM: de78b3cc7c3342e6f0191d701ad3c4392c6c8cc7
+PODFILE CHECKSUM: 60f47a852aa97c0e7125368ff459dcf7f7c2c092
 
 COCOAPODS: 1.6.1
