@@ -9,6 +9,10 @@ target 'MapsDirection' do
   pod 'GooglePlacesAPI'
   pod 'SwiftyJSON'
   pod 'Alamofire'
+  pod 'Firebase'
+  pod 'Firebase/Auth'
+  pod 'Firebase/Database'
+  pod 'SVProgressHUD'
 
   # Pods for Maps Direction
 
