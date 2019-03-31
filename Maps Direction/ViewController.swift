@@ -76,17 +76,17 @@ class ViewController: UIViewController , GMSMapViewDelegate ,  CLLocationManager
 		
 		let location = locations.last
 		
-//		let camera = GMSCameraPosition.camera(withLatitude: (location?.coordinate.latitude)!, longitude: (location?.coordinate.longitude)!, zoom: 17.0)
+		//let camera = GMSCameraPosition.camera(withLatitude: (location?.coordinate.latitude)!, longitude: (location?.coordinate.longitude)!, zoom: 17.0)
 		
-		let locationTujuan = CLLocation(latitude: 34.071200, longitude: -118.451690)
+		//let locationTujuan = CLLocation(latitude: 34.071200, longitude: -118.451690)
 		
-		createMarker(titleMarker: "Lokasi Tujuan", iconMarker: #imageLiteral(resourceName: "mapspin") , latitude: locationTujuan.coordinate.latitude, longitude: locationTujuan.coordinate.longitude)
+		//createMarker(titleMarker: "Lokasi Tujuan", iconMarker: #imageLiteral(resourceName: "mapspin") , latitude: locationTujuan.coordinate.latitude, longitude: locationTujuan.coordinate.longitude)
 		
 		createMarker(titleMarker: "Lokasi Aku", iconMarker: #imageLiteral(resourceName: "mapspin") , latitude: (location?.coordinate.latitude)!, longitude: (location?.coordinate.longitude)!)
 		
 //		drawPath(startLocation: location!, endLocation: locationTujuan)
 		
-//		self.googleMaps?.animate(to: camera)
+		//self.googleMaps?.animate(to: camera)
 		self.locationManager.stopUpdatingLocation()
 		
 	}
@@ -157,6 +157,7 @@ class ViewController: UIViewController , GMSMapViewDelegate ,  CLLocationManager
                 polyline.strokeColor = UIColor.red
                 polyline.map = self.googleMaps
                 
+                var yourArray = [String]()
                 let legs = route["legs"].arrayValue;
                 for leg in legs
                 {
@@ -165,15 +166,21 @@ class ViewController: UIViewController , GMSMapViewDelegate ,  CLLocationManager
                     {
                         let la = (step["end_location"]["lat"]).double
                         let ln = (step["end_location"]["lng"]).double
-                        self.convertLatLongToAddress(latitude:la!, longitude:ln!)
+                        //yourArray.append(self.convertLatLongToAddress(latitude:la!, longitude:ln!))
+                        self.getAddress(latitude: la!, longitude: ln!) { (address) in
+                            print(address)
+                            yourArray.append(address)
+                        }
                     }
                 }
+                //function compute
             }
 		}
 	}
     
-    func convertLatLongToAddress(latitude:Double,longitude:Double){
-        
+    func convertLatLongToAddress(latitude:Double,longitude:Double)->String{
+       // var yourArray = [String]()
+        var result : String = ""
         let geoCoder = CLGeocoder()
         let location = CLLocation(latitude: latitude, longitude: longitude)
         geoCoder.reverseGeocodeLocation(location, completionHandler: { (placemarks, error) -> Void in
@@ -183,23 +190,80 @@ class ViewController: UIViewController , GMSMapViewDelegate ,  CLLocationManager
             placeMark = placemarks?[0]
             // Location name
             if let locationName = placeMark.subThoroughfare {
-                print(locationName)
+                print (locationName)
+                result = self.parseString(num: locationName)
             }
             // Street address
             if let street = placeMark.thoroughfare {
-                print(street)
+                print (street)
+                result = result + " " + street;
             }
-            // Zip code
-            if let zip = placeMark.subAdministrativeArea {
-                print(zip)
-            }
-            // Country
-            if let country = placeMark.country {
-                print(country)
-            }
+            print (result)
         })
+        print (result)
+        return result
+    }
+    
+    func getAddress(latitude:Double,longitude:Double, handler: @escaping (String) -> Void)
+    {
+        var address: String = ""
+        let geoCoder = CLGeocoder()
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        //selectedLat and selectedLon are double values set by the app in a previous process
+        
+        geoCoder.reverseGeocodeLocation(location, completionHandler: { (placemarks, error) -> Void in
+            
+            // Place details
+            var placeMark: CLPlacemark?
+            placeMark = placemarks?[0]
+            
+            // Address dictionary
+            //print(placeMark.addressDictionary ?? "")
+            var temp : String = ""
+            
+            // Location name
+            if let locationName = placeMark?.subThoroughfare {
+                temp += self.parseString(num: locationName)
+            }
+            
+            // Street address
+            if let street = placeMark?.thoroughfare{
+                temp += " " + street
+            }
+            // Passing address back
+            address = temp
+            handler(address)
+        })
+    }
+    
+    func parseString (num: String)->String{
+        
+        let firstPart = num
+        if let range = num.range(of: "–") {
+            let firstPpart = num[num.startIndex..<range.lowerBound]
+            
+            let endIndex = firstPpart.index(firstPpart.endIndex, offsetBy: -2)
+            let truncated = firstPpart.substring(to: endIndex)
+            var newStr:String = truncated + String("0")
+            newStr = newStr + String("0")
+            return newStr
+        }
+        
+        let endIndex = firstPart.index(firstPart.endIndex, offsetBy: -2)
+        let truncated = firstPart.substring(to: endIndex)
+        var newStr:String = truncated + String("0")
+        newStr = newStr + String("0")
+        return newStr
+    }
+    
+    func calculateCrimeScore(/*1. csv reference 2. dict of route*/){
+        // int score
+        //for loop
+        // if (key = number, value = street)
+        // score += crime_score
         
     }
+    
     
     
     
